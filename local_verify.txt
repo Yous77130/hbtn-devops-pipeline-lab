@@ -1,0 +1,8 @@
+]633;E;echo "=== UNIT ===";f75f05f2-14b4-4124-a3f8-000eb23688d3]633;C=== UNIT ===
+Test Suites: 2 passed, 2 total
+Tests:       8 passed, 8 total
+=== INTEGRATION ===
+Test Suites: 1 passed, 1 total
+Tests:       3 passed, 3 total
+=== HEALTH ===
+{"status":"ok"}
