@@ -121,3 +121,36 @@ jobs:
             ghcr.io/${{ steps.image.outputs.name }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to Staging
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Render deploy
+        run: |
+          curl -f -X POST "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/deploys" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"clearCache":"do_not_clear"}'
+
+      - name: Verify staging liveness and database-backed route
+        env:
+          STAGING_URL: ${{ vars.STAGING_URL }}
+        run: |
+          max_attempts=30
+          sleep_seconds=10
+          for attempt in $(seq 1 "$max_attempts"); do
+            health_code=$(curl -s -o /dev/null -w '%{http_code}' "$STAGING_URL/health" || echo "000")
+            items_code=$(curl -s -o /dev/null -w '%{http_code}' "$STAGING_URL/items" || echo "000")
+            echo "Attempt $attempt/$max_attempts: /health=$health_code /items=$items_code"
+            if [ "$health_code" = "200" ] && [ "$items_code" = "200" ]; then
+              echo "Staging is live and the database-backed route responded."
+              exit 0
+            fi
+            sleep "$sleep_seconds"
+          done
+          echo "Staging did not become healthy within $((max_attempts * sleep_seconds)) seconds."
+          exit 1
