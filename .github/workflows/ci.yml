@@ -105,8 +105,9 @@ jobs:
 
       - name: Set lowercase image name
         # GHCR rejects uppercase repository paths, so ghcr.io/${{ github.repository }}:${{ github.sha }}
-        # would fail to push whenever the owner or repo name contains uppercase letters (ours does).
-        # This step derives a lowercase equivalent, used below for both the sha and latest tags.
+        # and ghcr.io/${{ github.repository }}:latest would fail to push whenever the owner or repo
+        # name contains uppercase letters (ours does). This step derives a lowercase equivalent,
+        # used below for both the sha and latest tags.
         id: image
         run: echo "name=${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
 
