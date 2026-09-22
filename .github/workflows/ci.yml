@@ -43,22 +43,39 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
-    steps:
-      - name: Check out the repository
-        uses: actions/checkout@v4
+          steps:
+        - name: Check out the repository
+          uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+        - name: Set up Node.js
+          uses: actions/setup-node@v4
+          with:
+            node-version: '20'
 
-      - name: Install dependencies
-        run: npm ci
+        - name: Cache npm dependencies
+          uses: actions/cache@v4
+          with:
+            path: ~/.npm
+            key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+            restore-keys: |
+              ${{ runner.os }}-npm-
 
-      - name: Run the unit tests
-        run: npm run test:unit
+        - name: Install dependencies
+          run: npm ci
 
-      - name: Run the integration tests
-        run: npm run test:integration
-        env:
-          DATABASE_URL: postgresql://pipeline:pipeline@localhost:5432/pipeline
+        - name: Run lint
+          run: npm run lint
+
+        - name: Run tests
+          env:
+            JEST_JUNIT_OUTPUT_DIR: ./reports
+            DATABASE_URL: postgresql://pipeline:pipeline@localhost:5432/pipeline
+          run: npm test -- --reporters=default --reporters=jest-junit
+
+        - name: Upload test reports
+          if: always()
+          uses: actions/upload-artifact@v4
+          with:
+            name: test-reports
+            path: reports/
+            retention-days: 7
