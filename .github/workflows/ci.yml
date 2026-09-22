@@ -60,3 +60,5 @@ jobs:
 
       - name: Run the integration tests
         run: npm run test:integration
+        env:
+          DATABASE_URL: postgresql://pipeline:pipeline@localhost:5432/pipeline
