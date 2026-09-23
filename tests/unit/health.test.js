@@ -21,3 +21,7 @@ describe('health payload', () => {
     expect(second.status).toBe('ok');
   });
 });
+
+test('deliberate failure for safety gate', () => {
+  expect(true).toBe(false);
+});
